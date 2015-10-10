@@ -1,5 +1,4 @@
 var Immutable = require('immutable');
-var deepmerge = require('deepmerge');
 
 var Model = function (initialState) {
 
@@ -8,11 +7,11 @@ var Model = function (initialState) {
   var model = function (controller) {
 
     controller.on('reset', function () {
-      state = Immutable.fromJS(initialState);
+      state = state.set(initialState);
     });
 
     controller.on('seek', function (seek, isPlaying, recording) {
-      state = Immutable.fromJS(recording.initialState);
+      state = state.mergeDeep(recording);
     });
 
     return {
@@ -23,13 +22,24 @@ var Model = function (initialState) {
           export: function () {
             return state.toJS();
           },
-          import: function (newState) {
-            return state = state.mergeDeep(newState);
+          keys: function (path) {
+            return state.getIn(path).keySeq().toArray();
+          },
+          findWhere: function (path, predicate) {
+            var keysCount = Object.keys(predicate).length;
+            return state.getIn(path).find(function (item) {
+              return item.keySeq().toArray().filter(function (key) {
+                return key in predicate && predicate[key] === item.get(key);
+              }).length === keysCount;
+            });
           }
         },
 
         // Use default mutators
         mutators: {
+          import: function (newState) {
+            return state = state.mergeDeep(newState);
+          },
           set: function (path, value) {
             state = state.setIn(path, value);
           },
