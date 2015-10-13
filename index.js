@@ -10,7 +10,7 @@ var Model = function (initialState) {
       state = state.set(initialState);
     });
 
-    controller.on('seek', function (seek, isPlaying, recording) {
+    controller.on('seek', function (seek, recording) {
       state = state.mergeDeep(recording);
     });
 
