@@ -11,7 +11,12 @@ var Model = function (initialState) {
     });
 
     controller.on('seek', function (seek, recording) {
-      state = state.mergeDeep(recording);
+      var path = (recording.path || []).slice();
+      var recordingState = {};
+      while (path.length) {
+        recordingState[path.shift()] = path.length === 0 ? recording.initialState : {};
+      }
+      state = state.mergeDeep(recordingState);
     });
 
     return {
