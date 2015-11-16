@@ -7,7 +7,7 @@ var Model = function (initialState) {
   var model = function (controller) {
 
     controller.on('reset', function () {
-      state = state.set(initialState);
+      state = Immutable.fromJS(initialState);
     });
 
     controller.on('seek', function (seek, recording) {
