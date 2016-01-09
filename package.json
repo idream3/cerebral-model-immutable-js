@@ -1,5 +1,5 @@
 {
-  "name": "cerebral-immutable-js",
+  "name": "cerebral-model-immutable-js",
   "version": "0.1.4",
   "description": "A state package for Cerebral",
   "main": "index.js",
