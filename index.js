@@ -24,6 +24,9 @@ var Model = function (initialState) {
           get: function (path) {
             return state.getIn(path);
           },
+          toJS: function (path) {
+            return state.get(path).toJS();
+          },
           export: function () {
             return state.toJS();
           },
