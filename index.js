@@ -1,5 +1,4 @@
 var Immutable = require('immutable');
-var Baobab = require('baobab');
 
 var Model = function (initialState) {
 
