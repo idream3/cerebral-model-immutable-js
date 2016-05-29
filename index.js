@@ -1,4 +1,5 @@
 var Immutable = require('immutable');
+var Baobab = require('baobab');
 
 var Model = function (initialState) {
 
@@ -11,8 +12,8 @@ var Model = function (initialState) {
     });
 
     controller.on('seek', function (seek, recording) {
-      recording.initialState.forEach(function (state) {
-        tree.set(state.path, state.value);
+      recording.initialState.forEach(function (stateUpdate) {
+        state = state.setIn(stateUpdate.path, Immutable.fromJS(stateUpdate.value));
       });
     });
 
@@ -25,7 +26,7 @@ var Model = function (initialState) {
             return state.getIn(path);
           },
           toJS: function (path) {
-            return state.get(path).toJS();
+            return state.getIn(path).toJS();
           },
           export: function () {
             return state.toJS();
@@ -46,10 +47,10 @@ var Model = function (initialState) {
         // Use default mutators
         mutators: {
           import: function (newState) {
-            return state = state.mergeDeep(newState);
+            return state = state.mergeDeep(Immutable.fromJS(newState));
           },
           set: function (path, value) {
-            state = state.setIn(path, value);
+            state = state.setIn(path, Immutable.fromJS(value));
           },
           unset: function (path, keys) {
             if (keys) {
@@ -63,24 +64,24 @@ var Model = function (initialState) {
           },
           push: function (path, value) {
             state = state.updateIn(path, function (array) {
-              return array.push(value);
+              return array.push(Immutable.fromJS(value));
             });
           },
           splice: function () {
             var args = [].slice.call(arguments);
             var path = args.shift();
             state = state.updateIn(path, function (array) {
-              return array.splice.apply(array, args);
+              return array.splice.apply(array, args.map(Immutable.fromJS.bind(Immutable)));
             });
           },
           merge: function (path, value) {
-            state = state.mergeIn(path, value);
+            state = state.mergeIn(path, Immutable.fromJS(value));
           },
           concat: function () {
             var args = [].slice.call(arguments);
             var path = args.shift();
             state = state.updateIn(path, function (array) {
-              return array.concat.apply(array, args);
+              return array.concat.apply(array, args.map(Immutable.fromJS.bind(Immutable)));
             });
           },
           pop: function (path) {
@@ -97,7 +98,7 @@ var Model = function (initialState) {
             var args = [].slice.call(arguments);
             var path = args.shift();
             state = state.updateIn(path, function (array) {
-              return array.unshift.apply(array, args);
+              return array.unshift.apply(array, args.map(Immutable.fromJS.bind(Immutable)));
             });
           }
         }
