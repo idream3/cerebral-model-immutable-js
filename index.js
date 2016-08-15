@@ -1,8 +1,32 @@
 var Immutable = require('immutable');
 
+
 var Model = function (initialState) {
 
   var state = Immutable.fromJS(initialState);
+  var trackPathChanges = [];
+
+  function get(path) {
+    return Array.isArray(path) ? state.getIn(path) : undefined;
+  }
+
+  /**
+   * Builds a nested object from array of string paths
+   */
+  function buildPathChanges(changes, path) {
+    path.reduce(function (changes, key, index) {
+      if (index === path.length - 1 && !changes[key]) {
+        changes[key] = true
+      } else if (changes[key] === true) {
+        changes[key] = {}
+      } else if (!changes[key]) {
+        changes[key] = {}
+      }
+
+      return changes[key];
+    }, changes);
+    return changes;
+  }
 
   var model = function (controller) {
 
@@ -16,26 +40,40 @@ var Model = function (initialState) {
       });
     });
 
+    controller.on('modulesLoaded', function () {
+      initialState = state.toJSON();
+    })
+
+    controller.on('change', function () {
+      var changedPaths = trackPathChanges.reduce(buildPathChanges, {});
+      
+      // Tell Cerebral to update the changed paths
+      controller.emit('flush', changedPaths);
+
+      // Reset the path tracking for next the round of updates
+      trackPathChanges = [];
+    });
+
     return {
         logModel: function () {
           return state.toJS();
         },
         accessors: {
           get: function (path) {
-            return state.getIn(path);
+            return get(path);
           },
           toJS: function (path) {
-            return state.getIn(path).toJS();
+            return get(path).toJS();
           },
           export: function () {
             return state.toJS();
           },
           keys: function (path) {
-            return state.getIn(path).keySeq().toArray();
+            return get(path).keySeq().toArray();
           },
           findWhere: function (path, predicate) {
             var keysCount = Object.keys(predicate).length;
-            return state.getIn(path).find(function (item) {
+            return get(path).find(function (item) {
               return item.keySeq().toArray().filter(function (key) {
                 return key in predicate && predicate[key] === item.get(key);
               }).length === keysCount;
@@ -49,6 +87,7 @@ var Model = function (initialState) {
             return state = state.mergeDeep(Immutable.fromJS(newState));
           },
           set: function (path, value) {
+            trackPathChanges.push(path);
             state = state.setIn(path, Immutable.fromJS(value));
           },
           unset: function (path, keys) {
@@ -65,6 +104,7 @@ var Model = function (initialState) {
             state = state.updateIn(path, function (array) {
               return array.push(Immutable.fromJS(value));
             });
+
           },
           splice: function () {
             var args = [].slice.call(arguments);
@@ -74,6 +114,7 @@ var Model = function (initialState) {
             });
           },
           merge: function (path, value) {
+            trackPathChanges.push(path);
             state = state.mergeIn(path, Immutable.fromJS(value));
           },
           concat: function () {
