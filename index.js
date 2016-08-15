@@ -14,13 +14,6 @@ var Model = function (initialState) {
     return path[0] ? path[0].split('.') : []
   }
 
-   // converts 'path.to.prop' or ['path.to.prop'] => ['path', 'to', 'prop'] for immutableJS
-  function trackChanges(path) {
-    path = 
-    trackPathChanges.push();
-    return path
-  }
-
   // Track converts 'path.to.prop' => ['path', 'to', 'prop'] for immutableJS
   function convertAndTrackPath(path) {
     path = Array.isArray(path) ? path.slice() : [path];
