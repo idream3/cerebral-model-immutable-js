@@ -1,13 +1,15 @@
 var Immutable = require('immutable');
-
+var { toImmutable, toJS } = require('immutable-helpers');
 
 var Model = function (initialState) {
 
-  var state = Immutable.fromJS(initialState);
+  var state = toImmutable(initialState);
   var trackPathChanges = [];
 
+  // Wrap getIn() method to return undefined if array not passed 
   function get(path) {
-    return Array.isArray(path) ? state.getIn(path) : undefined;
+    path = (Array.isArray(path) && path[0]) ? path[0].split('.') : []
+    return state.getIn(path);
   }
 
   /**
@@ -31,12 +33,12 @@ var Model = function (initialState) {
   var model = function (controller) {
 
     controller.on('reset', function () {
-      state = Immutable.fromJS(initialState);
+      state = toImmutable(initialState);
     });
 
     controller.on('seek', function (seek, recording) {
       recording.initialState.forEach(function (stateUpdate) {
-        state = state.setIn(stateUpdate.path, Immutable.fromJS(stateUpdate.value));
+        state = state.setIn(stateUpdate.path, toImmutable(stateUpdate.value));
       });
     });
 
@@ -56,17 +58,17 @@ var Model = function (initialState) {
 
     return {
         logModel: function () {
-          return state.toJS();
+          return toJS(state);
         },
         accessors: {
           get: function (path) {
             return get(path);
           },
           toJS: function (path) {
-            return get(path).toJS();
+            return toJS(get(path));
           },
           export: function () {
-            return state.toJS();
+            return toJS(state);
           },
           keys: function (path) {
             return get(path).keySeq().toArray();
@@ -84,11 +86,12 @@ var Model = function (initialState) {
         // Use default mutators
         mutators: {
           import: function (newState) {
-            return state = state.mergeDeep(Immutable.fromJS(newState));
+            return state = state.mergeDeep(toImmutable(newState));
           },
           set: function (path, value) {
             trackPathChanges.push(path);
-            state = state.setIn(path, Immutable.fromJS(value));
+            isImmutable
+            state = state.setIn(path, toImmutable(value));
           },
           unset: function (path, keys) {
             if (keys) {
@@ -102,7 +105,7 @@ var Model = function (initialState) {
           },
           push: function (path, value) {
             state = state.updateIn(path, function (array) {
-              return array.push(Immutable.fromJS(value));
+              return array.push(toImmutable(value));
             });
 
           },
@@ -110,18 +113,18 @@ var Model = function (initialState) {
             var args = [].slice.call(arguments);
             var path = args.shift();
             state = state.updateIn(path, function (array) {
-              return array.splice.apply(array, args.map(Immutable.fromJS.bind(Immutable)));
+              return array.splice.apply(array, args.map(toImmutable.bind(Immutable)));
             });
           },
           merge: function (path, value) {
             trackPathChanges.push(path);
-            state = state.mergeIn(path, Immutable.fromJS(value));
+            state = state.mergeIn(path, toImmutable(value));
           },
           concat: function () {
             var args = [].slice.call(arguments);
             var path = args.shift();
             state = state.updateIn(path, function (array) {
-              return array.concat.apply(array, args.map(Immutable.fromJS.bind(Immutable)));
+              return array.concat.apply(array, args.map(toImmutable.bind(Immutable)));
             });
           },
           pop: function (path) {
@@ -138,7 +141,7 @@ var Model = function (initialState) {
             var args = [].slice.call(arguments);
             var path = args.shift();
             state = state.updateIn(path, function (array) {
-              return array.unshift.apply(array, args.map(Immutable.fromJS.bind(Immutable)));
+              return array.unshift.apply(array, args.map(toImmutable.bind(Immutable)));
             });
           }
         }

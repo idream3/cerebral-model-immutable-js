@@ -4,7 +4,7 @@
   "description": "A state package for Cerebral",
   "main": "index.js",
   "scripts": {
-    "test": "nodeunit tests"
+    "test": "nodeunit-watcher --reporter minimal tests"
   },
   "repository": {
     "type": "git",
@@ -25,6 +25,7 @@
     "immutable": "^3.7.5"
   },
   "devDependencies": {
-    "nodeunit": "^0.9.1"
+    "nodeunit": "^0.9.1",
+    "nodeunit-watcher": "0.0.3"
   }
 }

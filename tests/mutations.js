@@ -1,4 +1,4 @@
-var Model = require('./../index.js');
+/*var Model = require('./../index.js');
 
 var dummyController = {
   on: function () {
@@ -152,3 +152,4 @@ exports['should be able to IMPORT state'] = function (test) {
   });
   test.done();
 };
+*/

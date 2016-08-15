@@ -13,8 +13,9 @@ exports['should be able to GET state'] = function (test) {
       list: ['foo', 'bar']
     }
   })(dummyController);
+  test.equal(model.accessors.get([]), model);
   test.deepEqual(model.accessors.get(['foo']), 'bar');
-  test.deepEqual(model.accessors.get(['admin', 'list', 1]), 'bar');
+  test.deepEqual(model.accessors.get(['admin.list.1']), 'bar');
   test.done();
 };
 
