@@ -10,7 +10,7 @@ var dummyController = {
 var data, immutableData, model;
 
 
-exports['should be able to set initial state'] = function (test) {
+exports['should be able to set initial state correctly'] = function (test) {
   data = {
     foo: 'bar',
     admin: {

@@ -25,7 +25,7 @@ var Model = function (initialState) {
   function convertAndTrackPath(path) {
     path = Array.isArray(path) ? path.slice() : [path];
     trackPathChanges.push(path);
-    return splitPath(path);
+    return path.length === 1 ? splitPath(path) : path;
   }
 
   // Wrap getIn() method to return undefined if array not passed 
