@@ -15,10 +15,21 @@ var Model = function (initialState) {
   }
 
   // Track converts 'path.to.prop' => ['path', 'to', 'prop'] for immutableJS
-  function convertAndTrackPath(path) {
+  function convertPath(path) {
     path = Array.isArray(path) ? path.slice() : [path];
-    trackPathChanges.push(path);
     return path.length === 1 ? splitPath(path) : path;
+  }
+
+  // Track converts 'path.to.prop' => ['path', 'to', 'prop'] for immutableJS
+  function convertAndTrackPath(path) {
+    // Let's make path a dot string for easier comparisons
+    path = Array.isArray(path) ? path.join('.') : path;
+
+    if (trackPathChanges.indexOf(path) === -1 && path !== '') {
+      trackPathChanges.push(path);
+    }
+      
+    return convertPath(path);
   }
 
   // Wrap getIn() method to return undefined if array not passed 
@@ -41,6 +52,7 @@ var Model = function (initialState) {
 
       return changes[key];
     }, changes);
+
     return changes;
   }
 
@@ -61,11 +73,12 @@ var Model = function (initialState) {
     })
 
     controller.on('change', function () {
-      var changedPaths = trackPathChanges.reduce(buildPathChanges, {});
+      var changedPaths = trackPathChanges
+                          .map(path => path.split('.'))
+                          .reduce(buildPathChanges, {});
       
       // Tell Cerebral to update the changed paths
       controller.emit('flush', changedPaths);
-
       // Reset the path tracking for next the round of updates
       trackPathChanges = [];
     });
@@ -76,22 +89,22 @@ var Model = function (initialState) {
         },
         accessors: {
           get: function (path) {
-            path = convertAndTrackPath(path);
+            path = convertPath(path);
             return state.getIn(path);
           },
           toJS: function (path) {
-            path = convertAndTrackPath(path);
+            path = convertPath(path);
             return toJS(state.getIn(path));
           },
           export: function () {
             return toJS(state);
           },
           keys: function (path) {
-            path = convertAndTrackPath(path);
+            path = convertPath(path);
             return state.getIn(path).keySeq().toArray();
           },
           findWhere: function (path, predicate) {
-            path = convertAndTrackPath(path);
+            path = convertPath(path);
             var keysCount = Object.keys(predicate).length;
             return state.getIn(path).find(function (item) {
               return item.keySeq().toArray().filter(function (key) {
@@ -137,7 +150,6 @@ var Model = function (initialState) {
           },
           merge: function (path, value) {
             path = convertAndTrackPath(path);
-            trackPathChanges.push(path);
             state = state.mergeIn(path, toImmutable(value));
           },
           concat: function () {
@@ -160,9 +172,8 @@ var Model = function (initialState) {
             });
           },
           unshift: function (path, value) {
-            path = convertAndTrackPath(path);
             var args = [].slice.call(arguments);
-            var path = args.shift();
+            var path = convertAndTrackPath(args.shift());
             state = state.updateIn(path, function (array) {
               return array.unshift.apply(array, args.map(toImmutable.bind(Immutable)));
             });
