@@ -1,15 +1,36 @@
 var Immutable = require('immutable');
-var { toImmutable, toJS } = require('immutable-helpers');
+var helpers = require('./immutable-helpers.js');
+var toImmutable = helpers.toImmutable;
+var toJS = helpers.toJS;
+
 
 var Model = function (initialState) {
 
   var state = toImmutable(initialState);
   var trackPathChanges = [];
 
+  // converts 'path.to.prop' or ['path.to.prop'] => ['path', 'to', 'prop'] for immutableJS
+  function splitPath(path) {
+    return path[0] ? path[0].split('.') : []
+  }
+
+   // converts 'path.to.prop' or ['path.to.prop'] => ['path', 'to', 'prop'] for immutableJS
+  function trackChanges(path) {
+    path = 
+    trackPathChanges.push();
+    return path
+  }
+
+  // Track converts 'path.to.prop' => ['path', 'to', 'prop'] for immutableJS
+  function convertAndTrackPath(path) {
+    path = Array.isArray(path) ? path.slice() : [path];
+    trackPathChanges.push(path);
+    return splitPath(path);
+  }
+
   // Wrap getIn() method to return undefined if array not passed 
   function get(path) {
-    path = (Array.isArray(path) && path[0]) ? path[0].split('.') : []
-    return state.getIn(path);
+    return state.getIn(convertAndTrackPath(path));
   }
 
   /**
@@ -62,20 +83,24 @@ var Model = function (initialState) {
         },
         accessors: {
           get: function (path) {
-            return get(path);
+            path = convertAndTrackPath(path);
+            return state.getIn(path);
           },
           toJS: function (path) {
-            return toJS(get(path));
+            path = convertAndTrackPath(path);
+            return toJS(state.getIn(path));
           },
           export: function () {
             return toJS(state);
           },
           keys: function (path) {
-            return get(path).keySeq().toArray();
+            path = convertAndTrackPath(path);
+            return state.getIn(path).keySeq().toArray();
           },
           findWhere: function (path, predicate) {
+            path = convertAndTrackPath(path);
             var keysCount = Object.keys(predicate).length;
-            return get(path).find(function (item) {
+            return state.getIn(path).find(function (item) {
               return item.keySeq().toArray().filter(function (key) {
                 return key in predicate && predicate[key] === item.get(key);
               }).length === keysCount;
@@ -89,11 +114,11 @@ var Model = function (initialState) {
             return state = state.mergeDeep(toImmutable(newState));
           },
           set: function (path, value) {
-            trackPathChanges.push(path);
-            isImmutable
+            path = convertAndTrackPath(path);
             state = state.setIn(path, toImmutable(value));
           },
           unset: function (path, keys) {
+            path = convertAndTrackPath(path);
             if (keys) {
               keys.forEach(function (key) {
                 state = state.deleteIn(path.concat(key));
@@ -104,6 +129,7 @@ var Model = function (initialState) {
 
           },
           push: function (path, value) {
+            path = convertAndTrackPath(path);
             state = state.updateIn(path, function (array) {
               return array.push(toImmutable(value));
             });
@@ -111,33 +137,37 @@ var Model = function (initialState) {
           },
           splice: function () {
             var args = [].slice.call(arguments);
-            var path = args.shift();
+            var path = convertAndTrackPath(args.shift());
             state = state.updateIn(path, function (array) {
               return array.splice.apply(array, args.map(toImmutable.bind(Immutable)));
             });
           },
           merge: function (path, value) {
+            path = convertAndTrackPath(path);
             trackPathChanges.push(path);
             state = state.mergeIn(path, toImmutable(value));
           },
           concat: function () {
             var args = [].slice.call(arguments);
-            var path = args.shift();
+            var path = convertAndTrackPath(args.shift());
             state = state.updateIn(path, function (array) {
               return array.concat.apply(array, args.map(toImmutable.bind(Immutable)));
             });
           },
           pop: function (path) {
+            path = convertAndTrackPath(path);
             state = state.updateIn(path, function (array) {
               return array.pop();
             });
           },
           shift: function (path) {
+            path = convertAndTrackPath(path);
             state = state.updateIn(path, function (array) {
               return array.shift();
             });
           },
           unshift: function (path, value) {
+            path = convertAndTrackPath(path);
             var args = [].slice.call(arguments);
             var path = args.shift();
             state = state.updateIn(path, function (array) {

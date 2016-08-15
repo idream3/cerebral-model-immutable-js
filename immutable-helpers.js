@@ -1,11 +1,11 @@
-import Immutable from 'immutable'
+var Immutable = require('immutable');
 
 /**
  * Checks if the passed in value is of type Object
  * @param {*} val
  * @return {boolean}
  */
-exports.isObject = function(obj) {
+var isObject = function(obj) {
   var type = typeof obj
   return type === 'function' || type === 'object' && !!obj
 }
@@ -19,7 +19,7 @@ exports.isObject = function(obj) {
  * @param {*} obj
  * @return {boolean}
  */
-export function isImmutable(obj) {
+var isImmutable = function(obj) {
   return Immutable.Iterable.isIterable(obj)
 }
 
@@ -29,7 +29,7 @@ export function isImmutable(obj) {
  * @param {*} obj
  * @return {boolean}
  */
-export function isImmutableValue(obj) {
+var isImmutableValue = function(obj) {
   return (
     isImmutable(obj) ||
     !isObject(obj)
@@ -40,7 +40,7 @@ export function isImmutableValue(obj) {
  * Converts an Immutable Sequence to JS object
  * Can be called on any type
  */
-export function toJS(arg) {
+exports.toJS = function(arg) {
   // arg instanceof Immutable.Sequence is unreliable
   return (isImmutable(arg))
     ? arg.toJS()
@@ -51,8 +51,8 @@ export function toJS(arg) {
  * Converts a JS object to an Immutable object, if it's
  * already Immutable its a no-op
  */
-export function toImmutable(arg) {
-  return (isImmutable(arg))
+exports.toImmutable = function(arg) {
+  return (isImmutableValue(arg))
     ? arg
     : Immutable.fromJS(arg)
 }

@@ -1,4 +1,5 @@
-/*var Model = require('./../index.js');
+var Immutable = require('immutable');
+var Model = require('./../index.js');
 
 var dummyController = {
   on: function () {
@@ -6,37 +7,39 @@ var dummyController = {
   }
 };
 
-exports['should be able to set initial state'] = function (test) {
-  var model = Model({
-    foo: 'bar'
-  })(dummyController);
-  var value = model.accessors.get(['foo']);
-  test.equal(value, 'bar');
-  test.done();
-};
+var data, immutableData, model;
 
-exports['should be able to get nested state'] = function (test) {
-  var model = Model({
+
+exports['should be able to set initial state'] = function (test) {
+  data = {
+    foo: 'bar',
     admin: {
-      foo: 'bar'
+      list: ['foo', 'bar']
     }
-  })(dummyController);
-  var value = model.accessors.get(['admin', 'foo']);
-  test.equal(value, 'bar');
+  };
+  immutableData = Immutable.fromJS(data);
+  model = Model(data)(dummyController);
+
+  test.equal(model.accessors.get(['foo']), 'bar');
+  test.deepEqual(model.accessors.get(), immutableData);
+  test.deepEqual(model.accessors.get(['admin']), Immutable.fromJS(data.admin));
   test.done();
 };
 
 exports['should be able to SET state'] = function (test) {
-  var model = Model({
+  var data = {
     foo: 'bar',
     admin: {
       foo: 'bar'
     }
-  })(dummyController);
+  }
+  var model = Model({})(dummyController);
   model.mutators.set(['foo'], 'bar2');
-  model.mutators.set(['admin', 'foo'], 'bar2');
+  model.mutators.set(['admin.foo'], 'bar2');
+  model.mutators.set(['admin.deep.nest'], Immutable.fromJS(data));
   test.equal(model.accessors.get(['foo']), 'bar2');
-  test.equal(model.accessors.get(['admin', 'foo']), 'bar2');
+  test.equal(model.accessors.get(['admin.foo']), 'bar2');
+  test.deepEqual(model.accessors.get(['admin.deep.nest']), Immutable.fromJS(data));
   test.done();
 };
 
@@ -62,9 +65,9 @@ exports['should be able to PUSH state'] = function (test) {
     }
   })(dummyController);
   model.mutators.push(['list'], 'foo');
-  model.mutators.push(['admin', 'list'], 'foo');
-  test.equal(model.accessors.get(['list', 0]), 'foo');
-  test.equal(model.accessors.get(['admin', 'list', 0]), 'foo');
+  model.mutators.push(['admin.list'], 'foo');
+  test.equal(model.accessors.get(['list.0']), 'foo');
+  test.equal(model.accessors.get(['admin.list.0']), 'foo');
   test.done();
 };
 
@@ -76,9 +79,9 @@ exports['should be able to SPLICE state'] = function (test) {
     }
   })(dummyController);
   model.mutators.splice(['list'], 0, 0, 'foo');
-  model.mutators.splice(['admin', 'list'], 0, 1, 'bar');
-  test.equal(model.accessors.get(['list', 0]), 'foo');
-  test.equal(model.accessors.get(['admin', 'list', 0]), 'bar');
+  model.mutators.splice(['admin.list'], 0, 1, 'bar');
+  test.equal(model.accessors.get(['list.0']), 'foo');
+  test.equal(model.accessors.get(['admin.list.0']), 'bar');
   test.done();
 };
 
@@ -99,8 +102,8 @@ exports['should be able to CONCAT state'] = function (test) {
       list: []
     }
   })(dummyController);
-  model.mutators.concat(['admin', 'list'], ['foo']);
-  test.equal(model.accessors.get(['admin', 'list', 0]), 'foo');
+  model.mutators.concat(['admin.list'], ['foo']);
+  test.equal(model.accessors.get(['admin.list.0']), 'foo');
   test.done();
 };
 
@@ -152,4 +155,3 @@ exports['should be able to IMPORT state'] = function (test) {
   });
   test.done();
 };
-*/
