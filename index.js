@@ -16,20 +16,22 @@ var Model = function (initialState) {
 
   // Track converts 'path.to.prop' => ['path', 'to', 'prop'] for immutableJS
   function convertPath(path) {
-    path = Array.isArray(path) ? path.slice() : [path];
-    return path.length === 1 ? splitPath(path) : path;
+    if (!path) return [];
+    return Array.isArray(path) ? path : [path]
   }
 
   // Track converts 'path.to.prop' => ['path', 'to', 'prop'] for immutableJS
   function convertAndTrackPath(path) {
     // Let's make path a dot string for easier comparisons
-    path = Array.isArray(path) ? path.join('.') : path;
+    path = convertPath(path);
 
-    if (trackPathChanges.indexOf(path) === -1 && path !== '') {
-      trackPathChanges.push(path);
+    var savePath = path.join('.');
+
+    if (trackPathChanges.indexOf(savePath) === -1 && savePath !== '') {
+      trackPathChanges.push(savePath);
     }
       
-    return convertPath(path);
+    return path;
   }
 
   // Wrap getIn() method to return undefined if array not passed 

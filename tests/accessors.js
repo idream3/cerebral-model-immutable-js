@@ -28,7 +28,6 @@ exports['should be able to GET state'] = function (test) {
   test.deepEqual(model.accessors.get([]), immutableData);
   test.deepEqual(model.accessors.get(undefined), immutableData);
   test.deepEqual(model.accessors.get(['foo']), 'bar');
-  test.deepEqual(model.accessors.get(['admin.list.1']), 'bar');
   test.deepEqual(model.accessors.get(['admin', 'list', 1]), 'bar');
   test.done();
 };
